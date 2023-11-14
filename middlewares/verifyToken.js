@@ -1,0 +1,29 @@
+const jwt = require("jsonwebtoken");
+const appError = require("../utils/appError");
+const httpStatusText = require("../utils/httpStatusText");
+
+const verifyToken = (req, res, next) => {
+  const authHeader =
+    req.headers["Authorization"] || req.headers["authorization"];
+
+  if (!authHeader) {
+    const err = appError.create(
+      "please provide token",
+      401,
+      httpStatusText.ERROR
+    );
+    return next(err);
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const currentUser = jwt.verify(token, process.env.JWT_SECRET);
+    req.currentUser = currentUser;
+    next();
+  } catch (error) {
+    const err = appError.create("invalid token", 401, httpStatusText.ERROR);
+    return next(err);
+  }
+};
+
+module.exports = verifyToken;
